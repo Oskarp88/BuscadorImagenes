@@ -5,7 +5,7 @@ import ListadoImagenes from "./components/ListadoImagenes";
 
 function App() {
 
-  const [busqueda,setBusqueda]=useState('');
+  const [busqueda,setBusqueda]=useState('general');
   const [imagen, setImagen]=useState([]);
   const [pagina_actual, setPaginaAtual] = useState(1);
   const [total_pagina, setTotalPaginas] = useState(1);
