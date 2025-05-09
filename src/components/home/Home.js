@@ -1,75 +1,81 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import Formulario from '../Formulario';
 import ListadoImagenes from '../ListadoImagenes';
+import Paginacion from './Paginacion';
 
 function Home() {
-  const [busqueda,setBusqueda]=useState('general');
-  const [imagen, setImagen]=useState([]);
+  const [busqueda, setBusqueda] = useState({
+    texto: 'general',
+    categoria: ''
+  });
+  const [imagen, setImagen] = useState([]);
   const [pagina_actual, setPaginaAtual] = useState(1);
   const [total_pagina, setTotalPaginas] = useState(1);
-  
 
-  useEffect(()=>{
-    const consultarApi = async()=>{
-      if(busqueda==='')return;
+  useEffect(() => {
+    const consultarApi = async () => {
+      if (busqueda.texto === '') return;
 
-    const imagenesPorPaginas = 30;
-    const apiKey = '31731518-ba625be4b648e502eadb35f4e';
-    const url = `https://pixabay.com/api/?key=${apiKey}&q=${busqueda}&per_pag=${imagenesPorPaginas}&page=${pagina_actual}`;
-    const result = await fetch(url);
-    const response = await result.json();
-    setImagen(response.hits);
+      const imagenesPorPaginas = 30;
+      const apiKey = '31731518-ba625be4b648e502eadb35f4e';
+      const { texto, categoria } = busqueda;
 
-    //calcular el total de paginas
-    const CantidadPaginas = Math.ceil(response.totalHits / imagenesPorPaginas);
-    setTotalPaginas(CantidadPaginas);
-    //al actualizar que la pantalla se muestre desde arriba
-    const jumbotron = document.querySelector('.jumbotron');
-    jumbotron.scrollIntoView({ behavior: 'smooth'})
-    }
+      const url = `https://pixabay.com/api/?key=${apiKey}&q=${encodeURIComponent(texto)}&per_page=${imagenesPorPaginas}&page=${pagina_actual}&category=${categoria}`;
+
+      const result = await fetch(url);
+      const response = await result.json();
+      setImagen(response.hits);
+
+      const CantidadPaginas = Math.ceil(response.totalHits / imagenesPorPaginas);
+      setTotalPaginas(CantidadPaginas);
+
+      const jumbotron = document.querySelector('.jumbotron');
+      if (jumbotron) {
+        jumbotron.scrollIntoView({ behavior: 'smooth' });
+      }
+    };
+
     consultarApi();
-  },[busqueda, pagina_actual]);
+  }, [busqueda, pagina_actual]);
 
-  //definir pagina anterior
-  const paginaAnterior = ()=>{
-     const nuevaPaginaActual = pagina_actual - 1;
-     if(nuevaPaginaActual===0) return;
-     setPaginaAtual(nuevaPaginaActual);
-  }
-  //definir pagina siguiente
+  // Funciones de paginación
+  const paginaAnterior = () => {
+    if (pagina_actual === 1) return;
+    setPaginaAtual(pagina_actual - 1);
+  };
+
   const paginaSiguiente = () => {
-    const pagCurrent = pagina_actual + 1;
-    if(pagCurrent === total_pagina +1)return;
-    setPaginaAtual(pagCurrent);
-  }
+    if (pagina_actual === total_pagina) return;
+    setPaginaAtual(pagina_actual + 1);
+  };
+
+  const irAPagina = (numero) => {
+    setPaginaAtual(numero);
+  };
 
   return (
     <>
-        <div className="jumbotron">
-            <p className="lead text-center">Buscador de Imagenes</p>
-            <Formulario setBusqueda={setBusqueda}/>
-        </div>
-        <div className="row justify-content-center">
-            <ListadoImagenes imagenes={imagen} />
-            {pagina_actual > 1 ?
-                <button
-                type='button'
-                className="bbtn btn-info mr-1"
-                onClick={paginaAnterior}
-            >&laquo; Anterior </button> : null
-            }
-            
-            {
-            pagina_actual < total_pagina ? 
-            <button
-            type='button'
-            className="bbtn btn-info"
-            onClick={paginaSiguiente}
-            >Siguiente &raquo;</button>: null
-            }
-        </div>
+      <div className="bg-light p-4 rounded shadow-sm mb-4 jumbotron">
+        <h1 className="text-center mb-3" style={{ fontWeight: '600' }}>📸 Buscador de Imágenes</h1>
+        <Formulario setBusqueda={setBusqueda} />
+      </div>
+
+      <div className="row justify-content-center">
+        <ListadoImagenes imagenes={imagen} />
+      </div>
+
+      {total_pagina > 1 && (
+        <Paginacion
+          pagina_actual={pagina_actual}
+          total_pagina={total_pagina}
+          paginaAnterior={paginaAnterior}
+          paginaSiguiente={paginaSiguiente}
+          irAPagina={irAPagina}
+        />
+      )}
     </>
-  )
+  );
 }
 
-export default Home
+export default Home;
+
